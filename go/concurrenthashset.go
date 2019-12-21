@@ -1,31 +1,31 @@
-package chset
+package main
 
 import (
 	cmap "github.com/orcaman/concurrent-map"
 )
 
 type ConcurrentHashSet struct {
-	Map cmap.ConcurrentMap
+	conmap cmap.ConcurrentMap
 }
 
-func New() *ConcurrentHashSet {
+func NewConcurrentHashSet() *ConcurrentHashSet {
 	hashSet := new(ConcurrentHashSet)
-	hashSet.Map = cmap.New()
+	hashSet.conmap = cmap.New()
 	return hashSet
 }
 
 func (hashSet ConcurrentHashSet) Add(value string) {
-	hashSet.Map.Set(value, nil)
+	hashSet.conmap.Set(value, nil)
 }
 
 func (hashSet ConcurrentHashSet) Contains(value string) bool {
-	return hashSet.Map.Has(value)
+	return hashSet.conmap.Has(value)
 }
 
 func (hashSet ConcurrentHashSet) Remove(value string) {
-	hashSet.Map.Remove(value)
+	hashSet.conmap.Remove(value)
 }
 
 func (hashSet ConcurrentHashSet) Length() int {
-	return hashSet.Map.Count()
+	return hashSet.conmap.Count()
 }
