@@ -53,7 +53,7 @@ namespace DiningPhilosophers
                     RightFork = Forks[nextFork],
                     Waiter = Waiter,
                     ThinkTime = 0,
-                    EatTime = 1000,
+                    EatTime = 0,
                     ThinkVariance = 0,
                     EatVariance = 0
                 };
