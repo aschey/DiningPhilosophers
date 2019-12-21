@@ -7,5 +7,6 @@ import "fmt"
 func main() {
 	hashSet := chset.New()
 	hashSet.Add("test")
-	fmt.Printf("%t", hashSet.Contains("test"))
+	hashSet.Add("test")
+	fmt.Printf("%t %d", hashSet.Contains("test"), hashSet.Length())
 }
