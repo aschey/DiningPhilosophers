@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"sync"
 )
 
@@ -10,13 +9,12 @@ type Fork struct {
 	mux   sync.Mutex
 }
 
-func (fork *Fork) Take() error {
+func (fork *Fork) Take() {
 	fork.mux.Lock()
 	if fork.InUse {
-		return errors.New("Taking fork that's in use")
+		panic("Taking fork that's in use")
 	}
 	fork.InUse = true
-	return nil
 }
 
 func (fork *Fork) Release() {

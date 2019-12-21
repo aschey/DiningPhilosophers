@@ -17,7 +17,7 @@ func (request Request) Overdue() bool {
 	return request.Priority >= request.MaxPriority
 }
 
-func NewRequestQueue() RequestQueue {
+func NewRequestQueue() *RequestQueue {
 	requestQueue := new(RequestQueue)
 	requestQueue.requestNames = NewConcurrentHashSet()
 	requestQueue.pendingRequests = NewConcurrentHashSet()
@@ -31,13 +31,15 @@ func NewRequestQueue() RequestQueue {
 	eventMangager.Subscribe("RequestAdded",
 		func(_ string) { requestQueue.Run() },
 		true)
+
+	return requestQueue
 }
 
 func (requestQueue RequestQueue) AddRequest(philosopher Philosopher) {
 	requestQueue.requestNames.Add(philosopher.Name)
 	request := new(Request)
 	request.Philosopher = philosopher
-	requestQueue.requests.Enqueue()
+	//requestQueue.requests.Enqueue()
 }
 
 func (requestQueue RequestQueue) Run() {
