@@ -8,9 +8,9 @@ type ConcurrentHashSet struct {
 	conmap cmap.ConcurrentMap
 }
 
-func NewConcurrentHashSet() *ConcurrentHashSet {
-	hashSet := new(ConcurrentHashSet)
-	hashSet.conmap = cmap.New()
+func NewConcurrentHashSet() ConcurrentHashSet {
+	hashSet := ConcurrentHashSet{conmap: cmap.New()}
+	//hashSet.conmap = cmap.New()
 	return hashSet
 }
 
