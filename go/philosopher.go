@@ -12,6 +12,7 @@ type Philosopher struct {
 	RightFork        *Fork
 	LeftPhilosopher  *Philosopher
 	RightPhilosopher *Philosopher
+	Waiter           Waiter
 	ThinkTime        int
 	EatTime          int
 	ThinkVariance    int
@@ -39,6 +40,8 @@ func (philosopher Philosopher) Think() {
 }
 
 func (philosopher Philosopher) Eat() {
+	requestChan := philosopher.Waiter.Request(philosopher)
+	<-requestChan
 	philosopher.LeftFork.Take()
 	philosopher.RightFork.Take()
 	fmt.Printf("%s began eating", philosopher.Name)
@@ -46,4 +49,11 @@ func (philosopher Philosopher) Eat() {
 	fmt.Printf("%s finished eating", philosopher.Name)
 	philosopher.LeftFork.Release()
 	philosopher.RightFork.Release()
+}
+
+func (philosopher Philosopher) Run() {
+	for true {
+		philosopher.Eat()
+		philosopher.Think()
+	}
 }
