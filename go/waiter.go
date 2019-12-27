@@ -1,19 +1,22 @@
 package main
 
 type Waiter struct {
-	requestQueue RequestQueue
+	requestQueue *RequestQueue
 }
 
 func NewWaiter() Waiter {
-	return Waiter{requestQueue: NewRequestQueue()}
+	q := NewRequestQueue()
+	return Waiter{requestQueue: &q}
 }
 
-func (waiter Waiter) Request(philosopher Philosopher) chan bool {
+func (waiter Waiter) Request(philosopher *Philosopher) chan bool {
 	requestChan := make(chan bool)
-	defer close(requestChan)
-	GetEventMangager().Subscribe(philosopher.Name+"RequestGranted", func(name string) {
+	//defer close(requestChan)
+	f := func(name string) {
 		requestChan <- true
-	}, true)
+		close(requestChan)
+	}
+	GetEventMangager().Subscribe(philosopher.Name+"RequestGranted", &f, true)
 	waiter.requestQueue.AddRequest(philosopher)
 	return requestChan
 }

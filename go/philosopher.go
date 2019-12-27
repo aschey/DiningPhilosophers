@@ -14,7 +14,7 @@ type Philosopher struct {
 	RightFork        *Fork
 	LeftPhilosopher  *Philosopher
 	RightPhilosopher *Philosopher
-	Waiter           Waiter
+	Waiter           *Waiter
 	ThinkTime        int
 	EatTime          int
 	ThinkVariance    int
@@ -34,16 +34,20 @@ func (philosopher Philosopher) NextEatTime() int {
 }
 
 func (philosopher Philosopher) CanEat() bool {
+	fmt.Printf("%s can eat: %t\n", philosopher.Name, !philosopher.LeftFork.InUse && !philosopher.RightFork.InUse)
 	return !philosopher.LeftFork.InUse && !philosopher.RightFork.InUse
 }
 
 func (philosopher Philosopher) Think() {
+	fmt.Printf("%s thinking\n", philosopher.Name)
 	time.Sleep(time.Duration(philosopher.NextThinkTime()))
 }
 
-func (philosopher Philosopher) Eat() {
+func (philosopher *Philosopher) Eat() {
+	fmt.Printf("%s awaiting eat\n", philosopher.Name)
 	requestChan := philosopher.Waiter.Request(philosopher)
-	<-requestChan
+	res := <-requestChan
+	fmt.Printf("granted %t\n", res)
 	philosopher.LeftFork.Take()
 	philosopher.RightFork.Take()
 	fmt.Printf("%s began eating\n", philosopher.Name)
@@ -51,9 +55,10 @@ func (philosopher Philosopher) Eat() {
 	fmt.Printf("%s finished eating\n", philosopher.Name)
 	philosopher.LeftFork.Release()
 	philosopher.RightFork.Release()
+	GetEventMangager().Broadcast("Finished", philosopher.Name)
 }
 
-func (philosopher Philosopher) Run(wg *sync.WaitGroup) {
+func (philosopher *Philosopher) Run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for true {
 		philosopher.Eat()

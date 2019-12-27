@@ -3,9 +3,9 @@ package main
 import "sync"
 
 type Table struct {
-	Philosophers []Philosopher
-	Forks        []Fork
-	Waiter       Waiter
+	Philosophers []*Philosopher
+	Forks        []*Fork
+	Waiter       *Waiter
 }
 
 func NewTable() Table {
@@ -25,8 +25,11 @@ func NewTable() Table {
 		"Chomsky",
 	}
 
-	forks := make([]Fork, len(names))
-	philosophers := make([]Philosopher, len(names))
+	forks := make([]*Fork, len(names))
+	for i := range forks {
+		forks[i] = &Fork{}
+	}
+	philosophers := make([]*Philosopher, len(names))
 	waiter := NewWaiter()
 
 	for i := range names {
@@ -36,15 +39,15 @@ func NewTable() Table {
 		}
 		philosopher := Philosopher{
 			Name:          names[i],
-			LeftFork:      &forks[i],
-			RightFork:     &forks[nextFork],
-			Waiter:        waiter,
+			LeftFork:      forks[i],
+			RightFork:     forks[nextFork],
+			Waiter:        &waiter,
 			ThinkTime:     0,
 			EatTime:       0,
 			ThinkVariance: 0,
 			EatVariance:   0,
 		}
-		philosophers[i] = philosopher
+		philosophers[i] = &philosopher
 	}
 
 	for i := range names {
@@ -56,14 +59,14 @@ func NewTable() Table {
 		if right == len(names) {
 			right = 0
 		}
-		philosophers[i].LeftPhilosopher = &philosophers[left]
-		philosophers[i].RightPhilosopher = &philosophers[right]
+		philosophers[i].LeftPhilosopher = philosophers[left]
+		philosophers[i].RightPhilosopher = philosophers[right]
 	}
 
 	table := Table{
 		Forks:        forks,
 		Philosophers: philosophers,
-		Waiter:       waiter,
+		Waiter:       &waiter,
 	}
 
 	return table

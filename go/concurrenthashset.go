@@ -5,16 +5,17 @@ import (
 )
 
 type ConcurrentHashSet struct {
-	conmap cmap.ConcurrentMap
+	conmap *cmap.ConcurrentMap
 }
 
 func NewConcurrentHashSet() ConcurrentHashSet {
-	hashSet := ConcurrentHashSet{conmap: cmap.New()}
+	newCmap := cmap.New()
+	hashSet := ConcurrentHashSet{conmap: &newCmap}
 	//hashSet.conmap = cmap.New()
 	return hashSet
 }
 
-func (hashSet ConcurrentHashSet) Add(value string) {
+func (hashSet *ConcurrentHashSet) Add(value string) {
 	hashSet.conmap.Set(value, nil)
 }
 
@@ -22,7 +23,7 @@ func (hashSet ConcurrentHashSet) Contains(value string) bool {
 	return hashSet.conmap.Has(value)
 }
 
-func (hashSet ConcurrentHashSet) Remove(value string) {
+func (hashSet *ConcurrentHashSet) Remove(value string) {
 	hashSet.conmap.Remove(value)
 }
 

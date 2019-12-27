@@ -5,7 +5,7 @@ import "sync"
 import cmap "github.com/orcaman/concurrent-map"
 
 type EventArgs struct {
-	Callbacks       []func(string)
+	Callbacks       []*func(string)
 	AutoUnsubscribe bool
 	Mux             sync.Mutex
 }
@@ -15,13 +15,13 @@ type EventManager struct {
 }
 
 var (
-	eventManagerSingleton EventManager
+	eventManagerSingleton *EventManager
 	once                  sync.Once
 )
 
-func GetEventMangager() EventManager {
+func GetEventMangager() *EventManager {
 	once.Do(func() {
-		eventManagerSingleton = EventManager{eventHandlers: cmap.New()}
+		eventManagerSingleton = &EventManager{eventHandlers: cmap.New()}
 	})
 
 	return eventManagerSingleton
@@ -29,10 +29,11 @@ func GetEventMangager() EventManager {
 
 func (manager EventManager) Broadcast(eventName string, arg string) {
 	value, _ := manager.eventHandlers.Get(eventName)
-	eventArgs, _ := value.(EventArgs)
+	eventArgs, _ := value.(*EventArgs)
 	eventArgs.Mux.Lock()
 	for _, callback := range eventArgs.Callbacks {
-		go callback(arg)
+		cFunc := *callback
+		go cFunc(arg)
 	}
 	if eventArgs.AutoUnsubscribe {
 		eventArgs.Callbacks = nil
@@ -40,7 +41,7 @@ func (manager EventManager) Broadcast(eventName string, arg string) {
 	eventArgs.Mux.Unlock()
 }
 
-func (manager EventManager) Subscribe(name string, callback func(string), autoUnsubscribe bool) {
+func (manager EventManager) Subscribe(name string, callback *func(string), autoUnsubscribe bool) {
 	value, contains := manager.eventHandlers.Get(name)
 	if contains {
 		args, _ := value.(EventArgs)
@@ -51,7 +52,7 @@ func (manager EventManager) Subscribe(name string, callback func(string), autoUn
 	} else {
 		args := new(EventArgs)
 		args.AutoUnsubscribe = autoUnsubscribe
-		args.Callbacks = []func(string){callback}
+		args.Callbacks = []*func(string){callback}
 		manager.eventHandlers.Set(name, args)
 	}
 }

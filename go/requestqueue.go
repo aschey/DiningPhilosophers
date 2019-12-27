@@ -1,15 +1,17 @@
 package main
 
+import "fmt"
+
 type RequestQueue struct {
-	requests        PriorityQueue
-	requestNames    ConcurrentHashSet
-	pendingRequests ConcurrentHashSet
+	requests        *PriorityQueue
+	requestNames    *ConcurrentHashSet
+	pendingRequests *ConcurrentHashSet
 	maxRequestNames int
 }
 
 type Request struct {
 	MaxPriority int
-	Philosopher Philosopher
+	Philosopher *Philosopher
 	Priority    int
 }
 
@@ -18,19 +20,27 @@ func (request Request) Overdue() bool {
 }
 
 func NewRequestQueue() RequestQueue {
+	r := NewConcurrentHashSet()
+	p := NewConcurrentHashSet()
 	requestQueue := RequestQueue{
-		requestNames:    NewConcurrentHashSet(),
-		pendingRequests: NewConcurrentHashSet(),
+		requestNames:    &r,
+		pendingRequests: &p,
 		maxRequestNames: 10,
+		requests:        new(PriorityQueue),
 	}
 
 	eventMangager := GetEventMangager()
+	f1 := func(name string) {
+		requestQueue.pendingRequests.Remove(name)
+	}
 	eventMangager.Subscribe("Finished",
-		func(name string) { requestQueue.pendingRequests.Remove(name) },
+		&f1,
 		false)
-
+	f2 := func(_ string) {
+		requestQueue.Run()
+	}
 	eventMangager.Subscribe("RequestAdded",
-		func(_ string) { requestQueue.Run() },
+		&f2,
 		true)
 
 	return requestQueue
@@ -40,7 +50,7 @@ func (requestQueue RequestQueue) Count() int {
 	return requestQueue.requests.Len()
 }
 
-func (requestQueue RequestQueue) AddRequest(philosopher Philosopher) {
+func (requestQueue *RequestQueue) AddRequest(philosopher *Philosopher) {
 	requestQueue.requestNames.Add(philosopher.Name)
 	requestQueue.requests.Push(&Item{value: Request{Philosopher: philosopher}, priority: 0})
 	GetEventMangager().Broadcast("RequestAdded", "")
@@ -63,12 +73,14 @@ func (requestQueue RequestQueue) Run() {
 		if philosopher.CanEat() && !neighborGranted && (request.Overdue() || lessThanTwoNeighborsRequested || requestQueue.requestNames.Length() > requestQueue.maxRequestNames) {
 			requestQueue.requestNames.Remove(philosopher.Name)
 			requestQueue.pendingRequests.Add(philosopher.Name)
+			fmt.Printf("granting %s", philosopher.Name)
 			GetEventMangager().Broadcast(philosopher.Name+"RequestGranted", "")
 		} else {
 			requestItem.priority++
-			requestQueue.requests.Push(&requestItem)
+			requestQueue.requests.Push(requestItem)
 
 		}
-		GetEventMangager().Subscribe("RequestAdded", func(_ string) { requestQueue.Run() }, true)
 	}
+	f := func(_ string) { requestQueue.Run() }
+	GetEventMangager().Subscribe("RequestAdded", &f, true)
 }
