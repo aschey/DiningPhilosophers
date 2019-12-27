@@ -6,6 +6,8 @@ import "time"
 
 import "fmt"
 
+import "sync"
+
 type Philosopher struct {
 	Name             string
 	LeftFork         *Fork
@@ -44,14 +46,15 @@ func (philosopher Philosopher) Eat() {
 	<-requestChan
 	philosopher.LeftFork.Take()
 	philosopher.RightFork.Take()
-	fmt.Printf("%s began eating", philosopher.Name)
+	fmt.Printf("%s began eating\n", philosopher.Name)
 	time.Sleep(time.Duration(philosopher.NextEatTime()))
-	fmt.Printf("%s finished eating", philosopher.Name)
+	fmt.Printf("%s finished eating\n", philosopher.Name)
 	philosopher.LeftFork.Release()
 	philosopher.RightFork.Release()
 }
 
-func (philosopher Philosopher) Run() {
+func (philosopher Philosopher) Run(wg *sync.WaitGroup) {
+	defer wg.Done()
 	for true {
 		philosopher.Eat()
 		philosopher.Think()

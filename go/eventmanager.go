@@ -15,13 +15,13 @@ type EventManager struct {
 }
 
 var (
-	eventManagerSingleton *EventManager
+	eventManagerSingleton EventManager
 	once                  sync.Once
 )
 
-func GetEventMangager() *EventManager {
+func GetEventMangager() EventManager {
 	once.Do(func() {
-		eventManagerSingleton = new(EventManager)
+		eventManagerSingleton = EventManager{eventHandlers: cmap.New()}
 	})
 
 	return eventManagerSingleton

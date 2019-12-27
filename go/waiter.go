@@ -4,6 +4,10 @@ type Waiter struct {
 	requestQueue RequestQueue
 }
 
+func NewWaiter() Waiter {
+	return Waiter{requestQueue: NewRequestQueue()}
+}
+
 func (waiter Waiter) Request(philosopher Philosopher) chan bool {
 	requestChan := make(chan bool)
 	defer close(requestChan)

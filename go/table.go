@@ -1,5 +1,7 @@
 package main
 
+import "sync"
+
 type Table struct {
 	Philosophers []Philosopher
 	Forks        []Fork
@@ -25,7 +27,7 @@ func NewTable() Table {
 
 	forks := make([]Fork, len(names))
 	philosophers := make([]Philosopher, len(names))
-	waiter := Waiter{}
+	waiter := NewWaiter()
 
 	for i := range names {
 		nextFork := i + 1
@@ -68,7 +70,10 @@ func NewTable() Table {
 }
 
 func (table Table) Run() {
+	wg := sync.WaitGroup{}
 	for _, philosopher := range table.Philosophers {
-		go philosopher.Run()
+		wg.Add(1)
+		go philosopher.Run(&wg)
 	}
+	wg.Wait()
 }

@@ -42,14 +42,14 @@ func (requestQueue RequestQueue) Count() int {
 
 func (requestQueue RequestQueue) AddRequest(philosopher Philosopher) {
 	requestQueue.requestNames.Add(philosopher.Name)
-	requestQueue.requests.Push(Item{value: Request{Philosopher: philosopher}, priority: 0})
+	requestQueue.requests.Push(&Item{value: Request{Philosopher: philosopher}, priority: 0})
 	GetEventMangager().Broadcast("RequestAdded", "")
 }
 
 func (requestQueue RequestQueue) Run() {
 	for requestQueue.Count() > 0 {
 		requestVal := requestQueue.requests.Pop()
-		requestItem := requestVal.(Item)
+		requestItem := requestVal.(*Item)
 		request := requestItem.value.(Request)
 		philosopher := request.Philosopher
 
@@ -66,7 +66,7 @@ func (requestQueue RequestQueue) Run() {
 			GetEventMangager().Broadcast(philosopher.Name+"RequestGranted", "")
 		} else {
 			requestItem.priority++
-			requestQueue.requests.Push(requestItem)
+			requestQueue.requests.Push(&requestItem)
 
 		}
 		GetEventMangager().Subscribe("RequestAdded", func(_ string) { requestQueue.Run() }, true)
