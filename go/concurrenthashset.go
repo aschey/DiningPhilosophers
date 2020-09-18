@@ -19,7 +19,7 @@ func (hashSet *ConcurrentHashSet) Add(value string) {
 	hashSet.conmap.Set(value, nil)
 }
 
-func (hashSet ConcurrentHashSet) Contains(value string) bool {
+func (hashSet *ConcurrentHashSet) Contains(value string) bool {
 	return hashSet.conmap.Has(value)
 }
 
@@ -27,6 +27,6 @@ func (hashSet *ConcurrentHashSet) Remove(value string) {
 	hashSet.conmap.Remove(value)
 }
 
-func (hashSet ConcurrentHashSet) Length() int {
+func (hashSet *ConcurrentHashSet) Length() int {
 	return hashSet.conmap.Count()
 }

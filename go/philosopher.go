@@ -1,12 +1,11 @@
 package main
 
-import "math/rand"
-
-import "time"
-
-import "fmt"
-
-import "sync"
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+)
 
 type Philosopher struct {
 	Name             string
@@ -25,20 +24,21 @@ func getVariance(baseTime int, variance int) int {
 	return baseTime + int(float32(-variance)+rand.Float32()*2.0*float32(variance))
 }
 
-func (philosopher Philosopher) NextThinkTime() int {
+func (philosopher *Philosopher) NextThinkTime() int {
 	return getVariance(philosopher.ThinkTime, philosopher.ThinkVariance)
 }
 
-func (philosopher Philosopher) NextEatTime() int {
+func (philosopher *Philosopher) NextEatTime() int {
 	return getVariance(philosopher.EatTime, philosopher.EatVariance)
 }
 
-func (philosopher Philosopher) CanEat() bool {
+func (philosopher *Philosopher) CanEat() bool {
+	//time.Sleep(time.Duration(100000000))
 	fmt.Printf("%s can eat: %t\n", philosopher.Name, !philosopher.LeftFork.InUse && !philosopher.RightFork.InUse)
 	return !philosopher.LeftFork.InUse && !philosopher.RightFork.InUse
 }
 
-func (philosopher Philosopher) Think() {
+func (philosopher *Philosopher) Think() {
 	fmt.Printf("%s thinking\n", philosopher.Name)
 	time.Sleep(time.Duration(philosopher.NextThinkTime()))
 }
@@ -47,7 +47,7 @@ func (philosopher *Philosopher) Eat() {
 	fmt.Printf("%s awaiting eat\n", philosopher.Name)
 	requestChan := philosopher.Waiter.Request(philosopher)
 	res := <-requestChan
-	fmt.Printf("granted %t\n", res)
+	fmt.Printf("%s granted %t\n", philosopher.Name, res)
 	philosopher.LeftFork.Take()
 	philosopher.RightFork.Take()
 	fmt.Printf("%s began eating\n", philosopher.Name)

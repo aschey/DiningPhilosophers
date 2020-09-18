@@ -13,6 +13,7 @@ namespace DiningPhilosophers
         private readonly SimplePriorityQueue<Request> _requests = new SimplePriorityQueue<Request>((current, next) => (int)(next - current));
         private readonly ConcurrentHashSet<string> _requestNames = new ConcurrentHashSet<string>();
         private readonly ConcurrentHashSet<string> _pendingRequests = new ConcurrentHashSet<string>();
+        private Mutex _mux = new Mutex();
 
         private const int MaxRequestNames = 10;
 
@@ -33,7 +34,9 @@ namespace DiningPhilosophers
         {
             while (_requests.Count > 0)
             {
+                _mux.WaitOne();
                 var request = _requests.Dequeue();
+                _mux.ReleaseMutex();
                 var philosopher = request.Philosopher;
 
                 var leftNeighborRequested = _requestNames.Contains(philosopher.LeftPhilosopher.Name);
@@ -52,7 +55,9 @@ namespace DiningPhilosophers
                 else
                 {
                     request.Priority++;
+                    _mux.WaitOne();
                     _requests.Enqueue(request, request.Priority);
+                    _mux.ReleaseMutex();
                 }
             }
             EventManager.Subscribe("RequestAdded", (name) => Run());

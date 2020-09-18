@@ -11,6 +11,7 @@ type Fork struct {
 
 func (fork *Fork) Take() {
 	fork.mux.Lock()
+	defer fork.mux.Unlock()
 	if fork.InUse {
 		panic("Taking fork that's in use")
 	}

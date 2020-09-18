@@ -1,12 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 type RequestQueue struct {
 	requests        *PriorityQueue
 	requestNames    *ConcurrentHashSet
 	pendingRequests *ConcurrentHashSet
 	maxRequestNames int
+	mux             sync.Mutex
 }
 
 type Request struct {
@@ -19,7 +23,7 @@ func (request Request) Overdue() bool {
 	return request.Priority >= request.MaxPriority
 }
 
-func NewRequestQueue() RequestQueue {
+func NewRequestQueue() *RequestQueue {
 	r := NewConcurrentHashSet()
 	p := NewConcurrentHashSet()
 	requestQueue := RequestQueue{
@@ -43,22 +47,28 @@ func NewRequestQueue() RequestQueue {
 		&f2,
 		true)
 
-	return requestQueue
+	return &requestQueue
 }
 
-func (requestQueue RequestQueue) Count() int {
+func (requestQueue *RequestQueue) Count() int {
+	requestQueue.mux.Lock()
+	defer requestQueue.mux.Unlock()
 	return requestQueue.requests.Len()
 }
 
 func (requestQueue *RequestQueue) AddRequest(philosopher *Philosopher) {
 	requestQueue.requestNames.Add(philosopher.Name)
+	requestQueue.mux.Lock()
 	requestQueue.requests.Push(&Item{value: Request{Philosopher: philosopher}, priority: 0})
+	requestQueue.mux.Unlock()
 	GetEventMangager().Broadcast("RequestAdded", "")
 }
 
-func (requestQueue RequestQueue) Run() {
+func (requestQueue *RequestQueue) Run() {
 	for requestQueue.Count() > 0 {
+		requestQueue.mux.Lock()
 		requestVal := requestQueue.requests.Pop()
+		requestQueue.mux.Unlock()
 		requestItem := requestVal.(*Item)
 		request := requestItem.value.(Request)
 		philosopher := request.Philosopher
@@ -73,11 +83,13 @@ func (requestQueue RequestQueue) Run() {
 		if philosopher.CanEat() && !neighborGranted && (request.Overdue() || lessThanTwoNeighborsRequested || requestQueue.requestNames.Length() > requestQueue.maxRequestNames) {
 			requestQueue.requestNames.Remove(philosopher.Name)
 			requestQueue.pendingRequests.Add(philosopher.Name)
-			fmt.Printf("granting %s", philosopher.Name)
-			GetEventMangager().Broadcast(philosopher.Name+"RequestGranted", "")
+			fmt.Printf("granting %s\n", philosopher.Name)
+			GetEventMangager().Broadcast(philosopher.Name+"RequestGranted", philosopher.Name)
 		} else {
 			requestItem.priority++
+			requestQueue.mux.Lock()
 			requestQueue.requests.Push(requestItem)
+			requestQueue.mux.Unlock()
 
 		}
 	}
